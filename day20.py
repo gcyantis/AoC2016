@@ -5,58 +5,38 @@ def extendRanges(ranges):
         added = False
         for i in range(len(ranges)):
             x, y = ranges[i]
-            if l < x and r >= x-1:
-                x = l
-                y = r if r > y else y
-                ranges[i] = (x,y)
-                added = True
-                break
-            elif r > y and l <= y+1:
-                y = r
-                x = l if l < x else x
-                ranges[i] = (x,y)
-                added = True
+            #check to see if span overlaps current range
+            if (l < x and r >= x-1) or (r > y and l <= y+1):
+                x, y = l if l < x else x, r if r > y else y
+                ranges[i], added = (x,y), True
                 break
         if added:
             del ranges[j]
         j+=1
-    ranges.sort(key=lambda tup:tup[0])
     return ranges
 
 def generateRanges():
     input = open("inputs/day20.txt", "r")
     ranges = []
     for line in input:
-        l, r = line.strip().split('-')
-        l, r = int(l), int(r)
-        added = False
-        for i in range(len(ranges)):
-            x, y = ranges[i]
-            if l < x and r >= x-1:
-                x = l
-                y = r if r > y else y
-                ranges[i] = (x,y)
-                added = True
-            elif r > y and l <= y+1:
-                y = r
-                x = l if l < x else x
-                ranges[i] = (x,y)
-                added = True
-        if not added:
-            ranges.append((l,r))
-    ranges = list(set(ranges))
-    ranges.sort(key=lambda tup:tup[0])
+        l, r = [int(x) for x in line.strip().split('-')]
+        ranges.append((l,r))
     input.close
 
-    prevLen, shorten = len(ranges), True
-    while shorten:
-        ranges = extendRanges(ranges)
-        shorten = True if len(ranges) < prevLen else False
-        prevLen = prevLen = len(ranges)
+    #clean up inputs: eliminate duplicates, then sort
+    ranges = list(set(ranges))
+    ranges.sort(key=lambda tup:tup[0])
+
+    #ranges can overlap, so loop over ranges until none do anymore
+    prevLen, condense = len(ranges), True
+    while condense:
+        ranges, condense, prevLen = extendRanges(ranges), True if len(ranges) < prevLen else False, len(ranges)
 
     return ranges
 
 def findAllowed(ranges):
+    #makes assumption that 0 and 4294967295 are blacklisted
+    #allows for ranges of allowed, even though not needed by problem
     allowed = []
     for i in range(len(ranges)-1):
         x, y = ranges[i][1]+1, ranges[i+1][0]-1
@@ -66,8 +46,8 @@ def findAllowed(ranges):
             allowed.append((x,y))
     return allowed
 
-
-ranges = generateRanges()
-allowed = findAllowed(ranges)
-print('Lowest allowed IP:',allowed[0])
-print('Count allowed IPs:',len(allowed))
+#Create blacklist, find allowed, output parts
+blacklist = generateRanges()
+allowed = findAllowed(blacklist)
+print('Lowest allowed IP:', allowed[0])
+print('Count allowed IPs:', len(allowed))
