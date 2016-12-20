@@ -1,18 +1,12 @@
 def extendRanges(ranges):
-    j = 0
-    while j < len(ranges):
-        l, r = ranges[j]
-        added = False
-        for i in range(len(ranges)):
-            x, y = ranges[i]
-            #check to see if span overlaps current range
-            if (l < x and r >= x-1) or (r > y and l <= y+1):
-                x, y = l if l < x else x, r if r > y else y
-                ranges[i], added = (x,y), True
-                break
-        if added:
+    #requires that ranges be sorted by x for (x,y) ranges in ascending order
+    i = 0
+    while i < len(ranges)-1:
+        j = i + 1
+        while j < len(ranges) and ranges[j][0] <= ranges[i][1] + 1:
+            ranges[i] = (ranges[i][0], ranges[j][1] if ranges[j][1] > ranges[i][1] else ranges[i][1])
             del ranges[j]
-        j+=1
+        i += 1
     return ranges
 
 def generateRanges():
@@ -23,27 +17,18 @@ def generateRanges():
         ranges.append((l,r))
     input.close
 
-    #clean up inputs: eliminate duplicates, then sort
+    #clean up inputs: eliminate duplicates, sort, then extend overlapped
     ranges = list(set(ranges))
     ranges.sort(key=lambda tup:tup[0])
-
-    #ranges can overlap, so loop over ranges until none do anymore
-    prevLen, condense = len(ranges), True
-    while condense:
-        ranges, condense, prevLen = extendRanges(ranges), True if len(ranges) < prevLen else False, len(ranges)
+    ranges = extendRanges(ranges)
 
     return ranges
 
 def findAllowed(ranges):
     #makes assumption that 0 and 4294967295 are blacklisted
-    #allows for ranges of allowed, even though not needed by problem
     allowed = []
     for i in range(len(ranges)-1):
-        x, y = ranges[i][1]+1, ranges[i+1][0]-1
-        if x == y:
-            allowed.append(x)
-        else:
-            allowed.append((x,y))
+        allowed.append(ranges[i][1]+1)
     return allowed
 
 #Create blacklist, find allowed, output parts
