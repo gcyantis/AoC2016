@@ -25,7 +25,7 @@ def generateRanges():
     return ranges
 
 def findAllowed(ranges):
-    #makes assumption that 0 and 4294967295 are blacklisted
+    #makes assumption that 0 and 4294967295 are blacklisted and that only individual values exist between ranges
     allowed = []
     for i in range(len(ranges)-1):
         allowed.append(ranges[i][1]+1)
